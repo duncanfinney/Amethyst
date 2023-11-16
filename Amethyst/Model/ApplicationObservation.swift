@@ -213,6 +213,7 @@ struct ApplicationObservation<Delegate: ApplicationObservationDelegate> {
      An error when failing to add observer.
      */
     private func addObserver(for notification: Notification) throws {
+        log.debug("addObserver for:\(notification)")
         let success = application.observe(notification: notification.string) { element in
             guard let window = Window(element: element) else {
                 return
@@ -239,6 +240,7 @@ struct ApplicationObservation<Delegate: ApplicationObservationDelegate> {
     }
 
     private func handle(notification: Notification, window: Window) {
+        log.debug("app_notification=\(notification) | window=\(window.id()))")
         switch notification {
         case .created:
             delegate?.application(application, didFindPotentiallyNewWindow: window)

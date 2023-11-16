@@ -9,12 +9,19 @@
 import Foundation
 import Silica
 
+enum MouseStatePhysical {
+    case pointing
+    case clicking
+    case dragging
+}
+
 protocol ScreenManagerDelegate: AnyObject {
     associatedtype Window: WindowType
     func applyWindowLimit(forScreenManager screenManager: ScreenManager<Self>, minimizingIn range: (_ windowCount: Int) -> Range<Int>)
     func activeWindowSet(forScreenManager screenManager: ScreenManager<Self>) -> WindowSet<Window>
     func onReflowInitiation()
     func onReflowCompletion()
+    func mouseState() -> MouseStatePhysical
 }
 
 final class ScreenManager<Delegate: ScreenManagerDelegate>: NSObject, Codable {
@@ -168,7 +175,7 @@ final class ScreenManager<Delegate: ScreenManagerDelegate>: NSObject, Codable {
             if lastFocusedWindow == window {
                 lastFocusedWindow = nil
             }
-        case .windowSwap, .applicationActivate, .applicationDeactivate, .spaceChange, .layoutChange, .unknown:
+        case .windowSwap, .applicationActivate, .applicationDeactivate, .spaceChange, .layoutChange, .resizeWindow, .unknown:
             break
         }
 
@@ -221,43 +228,64 @@ final class ScreenManager<Delegate: ScreenManagerDelegate>: NSObject, Codable {
         })
     }
 
+    private var debounceWorkItem: DispatchWorkItem?
+
     private func reflow(_ event: Change<Window>) {
-        guard let screen = screen else {
-            return
-        }
-
-        guard userConfiguration.tilingEnabled, space?.type == CGSSpaceTypeUser else {
-            return
-        }
-
-        guard let windows = delegate?.activeWindowSet(forScreenManager: self) else {
-            return
-        }
-
-        guard let layout = currentLayout, let frameAssignments = layout.frameAssignments(windows, on: screen) else {
-            return
-        }
-
-        let completeOperation = BlockOperation()
-
-        // The complete operation should execute the completion delegate call
-        completeOperation.addExecutionBlock { [unowned completeOperation, weak self] in
-            if completeOperation.isCancelled {
+        debounceWorkItem?.cancel()
+        debounceWorkItem = DispatchWorkItem { [weak self] in
+            guard let self = self else {
                 return
             }
 
-            DispatchQueue.main.async {
-                self?.delegate?.onReflowCompletion()
+            if  delegate?.mouseState() == .dragging {
+//                log.info("trying again because we are dragging")
+                reflow(event)
+                return
             }
+
+            log.info("reflow \(event)")
+            guard let screen = screen else {
+                return
+            }
+
+            guard userConfiguration.tilingEnabled, space?.type == CGSSpaceTypeUser else {
+                return
+            }
+
+            guard let windows = delegate?.activeWindowSet(forScreenManager: self) else {
+                return
+            }
+
+            guard let layout = currentLayout, let frameAssignments = layout.frameAssignments(windows, on: screen) else {
+                return
+            }
+
+            let completeOperation = BlockOperation()
+
+            // The complete operation should execute the completion delegate call
+            completeOperation.addExecutionBlock { [unowned completeOperation, weak self] in
+                if completeOperation.isCancelled {
+                    return
+                }
+
+                DispatchQueue.main.async {
+                    self?.delegate?.onReflowCompletion()
+                }
+            }
+
+            // The completion should be dependent on all assignments finishing
+            frameAssignments.forEach { completeOperation.addDependency($0) }
+
+            // Start the operation
+            delegate?.onReflowInitiation()
+            reflowOperationQueue.addOperations(frameAssignments, waitUntilFinished: false)
+            reflowOperationQueue.addOperation(completeOperation)
+
         }
 
-        // The completion should be dependent on all assignments finishing
-        frameAssignments.forEach { completeOperation.addDependency($0) }
-
-        // Start the operation
-        delegate?.onReflowInitiation()
-        reflowOperationQueue.addOperations(frameAssignments, waitUntilFinished: false)
-        reflowOperationQueue.addOperation(completeOperation)
+        if let debounceWorkItem = debounceWorkItem {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.075, execute: debounceWorkItem) // 75
+        }
     }
 
     func updateCurrentLayout(_ updater: (Layout<Window>) -> Void) {

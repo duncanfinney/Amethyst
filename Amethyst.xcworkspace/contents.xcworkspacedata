@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:../Silica/Silica.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:Amethyst.xcodeproj">
    </FileRef>
    <FileRef

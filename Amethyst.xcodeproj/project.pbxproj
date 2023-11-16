@@ -3,11 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		1A4B46EB20AA7717003D5110 /* NSTableView+Amethyst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A4B46EA20AA7717003D5110 /* NSTableView+Amethyst.swift */; };
+		1FC9FDF42B03B82400D02FA4 /* Silica in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC9FDF32B03B82400D02FA4 /* Silica */; };
 		2A6D9A4125E5D24D006A36B5 /* AppManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A6D9A4025E5D24D006A36B5 /* AppManager.swift */; };
 		4000DB10239CA07000365A0C /* WideLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4000DB0F239CA07000365A0C /* WideLayoutTests.swift */; };
 		400540F22325CDF4004B8656 /* Reliability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 400540F12325CDF4004B8656 /* Reliability.swift */; };
@@ -47,7 +48,6 @@
 		402DB6F81742E41A00D1C936 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 402DB6F61742E41A00D1C936 /* MainMenu.xib */; };
 		402DB6FF1742E44E00D1C936 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 402DB6FE1742E44E00D1C936 /* Carbon.framework */; };
 		402F6FA62A81C9E30036B512 /* SkyLight.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 402F6FA52A81C9E30036B512 /* SkyLight.framework */; };
-		403D9EE72A94494700F278F2 /* Silica in Frameworks */ = {isa = PBXBuildFile; productRef = 403D9EE62A94494700F278F2 /* Silica */; };
 		403E1A2A2337173600DB7B2A /* FloatingLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 403E1A292337173600DB7B2A /* FloatingLayoutTests.swift */; };
 		403E1A2C233719E500DB7B2A /* TallLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 403E1A2B233719E500DB7B2A /* TallLayoutTests.swift */; };
 		4045416F268FFDA000861BE8 /* CustomLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4045416E268FFDA000861BE8 /* CustomLayout.swift */; };
@@ -268,6 +268,7 @@
 				400D49002A92B0A00082750F /* Yams in Frameworks */,
 				40AE15E62A92EA7500E14536 /* RxCocoa in Frameworks */,
 				40C3F91F1BD1B22E00F58660 /* SystemConfiguration.framework in Frameworks */,
+				1FC9FDF42B03B82400D02FA4 /* Silica in Frameworks */,
 				40AE15E82A92EA7500E14536 /* RxSwift in Frameworks */,
 				400D48F72A92AF9B0082750F /* LoginServiceKit in Frameworks */,
 				402DB6E21742E41A00D1C936 /* Cocoa.framework in Frameworks */,
@@ -275,7 +276,6 @@
 				40C3F91E1BD1B22E00F58660 /* Security.framework in Frameworks */,
 				40CF37C029B440A100CDB07A /* ArgumentParser in Frameworks */,
 				400D48FA2A92B0130082750F /* Sparkle in Frameworks */,
-				403D9EE72A94494700F278F2 /* Silica in Frameworks */,
 				402F6FA62A81C9E30036B512 /* SkyLight.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -618,7 +618,7 @@
 				40AE15E52A92EA7500E14536 /* RxCocoa */,
 				40AE15E72A92EA7500E14536 /* RxSwift */,
 				40AE15F42A92EE8000E14536 /* MASShortcut */,
-				403D9EE62A94494700F278F2 /* Silica */,
+				1FC9FDF32B03B82400D02FA4 /* Silica */,
 			);
 			productName = Amethyst;
 			productReference = 402DB6DE1742E41A00D1C936 /* Amethyst.app */;
@@ -661,7 +661,6 @@
 				TargetAttributes = {
 					402DB6DD1742E41A00D1C936 = {
 						LastSwiftMigration = 1010;
-						ProvisioningStyle = Automatic;
 					};
 					40D95B461C6E2ED800AAF433 = {
 						CreatedOnToolsVersion = 7.2.1;
@@ -692,7 +691,7 @@
 				40AE15EC2A92EBD800E14536 /* XCRemoteSwiftPackageReference "Quick" */,
 				40AE15EF2A92EC5300E14536 /* XCRemoteSwiftPackageReference "Nimble" */,
 				40AE15F32A92EE8000E14536 /* XCRemoteSwiftPackageReference "MASShortcut" */,
-				403D9EE52A94494700F278F2 /* XCRemoteSwiftPackageReference "silica" */,
+				1FC9FDF22B03B82400D02FA4 /* XCLocalSwiftPackageReference "../Silica" */,
 			);
 			productRefGroup = 402DB6DF1742E41A00D1C936 /* Products */;
 			projectDirPath = "";
@@ -1004,13 +1003,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Amethyst/AmethystDebug.entitlements;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 108;
 				DEAD_CODE_STRIPPING = YES;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 6QS6PJNCD9;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_MODULE_VERIFIER = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1046,13 +1046,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Amethyst/Amethyst.entitlements;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 108;
 				DEAD_CODE_STRIPPING = YES;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 82P2XLB4UH;
+				DEVELOPMENT_TEAM = 6QS6PJNCD9;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_MODULE_VERIFIER = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1178,6 +1179,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		1FC9FDF22B03B82400D02FA4 /* XCLocalSwiftPackageReference "../Silica" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../Silica;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		400D48F22A92AF1E0082750F /* XCRemoteSwiftPackageReference "Cartography" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -1217,14 +1225,6 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 5.0.0;
-			};
-		};
-		403D9EE52A94494700F278F2 /* XCRemoteSwiftPackageReference "silica" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ianyh/silica";
-			requirement = {
-				branch = master;
-				kind = branch;
 			};
 		};
 		40AE15E12A92E9AF00E14536 /* XCRemoteSwiftPackageReference "SwiftyBeaver" */ = {
@@ -1278,6 +1278,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		1FC9FDF32B03B82400D02FA4 /* Silica */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Silica;
+		};
 		400D48F32A92AF1E0082750F /* Cartography */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 400D48F22A92AF1E0082750F /* XCRemoteSwiftPackageReference "Cartography" */;
@@ -1302,11 +1306,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 400D48FE2A92B0A00082750F /* XCRemoteSwiftPackageReference "Yams" */;
 			productName = Yams;
-		};
-		403D9EE62A94494700F278F2 /* Silica */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 403D9EE52A94494700F278F2 /* XCRemoteSwiftPackageReference "silica" */;
-			productName = Silica;
 		};
 		40AE15E22A92E9AF00E14536 /* SwiftyBeaver */ = {
 			isa = XCSwiftPackageProductDependency;

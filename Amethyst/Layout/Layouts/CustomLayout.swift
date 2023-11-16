@@ -309,6 +309,8 @@ class CustomLayout<Window: WindowType>: StatefulLayout<Window> {
             jsChange["change"] = "space_change"
         case .layoutChange:
             jsChange["change"] = "layout_change"
+        case .resizeWindow:
+            jsChange["change"] = "resize_window"
         case .unknown:
             jsChange["change"] = "unknown"
         }

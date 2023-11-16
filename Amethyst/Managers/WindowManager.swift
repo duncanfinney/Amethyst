@@ -25,6 +25,9 @@ import SwiftyJSON
 private let mouseMoveClickSpeedTolerance: TimeInterval = 0.3
 
 final class WindowManager<Application: ApplicationType>: NSObject, Codable {
+
+    var lastWindowsOnScreen: [String: Set<Application.Window.WindowID>] = [:]
+
     typealias Window = Application.Window
     typealias Screen = Window.Screen
 
@@ -53,7 +56,7 @@ final class WindowManager<Application: ApplicationType>: NSObject, Codable {
     private var lastReflowTime = Date()
     private var lastFocusDate: Date?
 
-    private lazy var mouseStateKeeper = MouseStateKeeper(delegate: self)
+    public lazy var mouseStateKeeper = MouseStateKeeper(delegate: self)
     private lazy var applicationEventHandler = ApplicationEventHandler(delegate: self)
     private let userConfiguration: UserConfiguration
     private let disposeBag = DisposeBag()
@@ -112,8 +115,7 @@ final class WindowManager<Application: ApplicationType>: NSObject, Codable {
         guard let focusedWindow = Window.currentlyFocused(), let screen = focusedWindow.screen() else {
             return
         }
-        markScreen(screen, forReflowWithChange: .unknown)
-//        doMouseFollowsFocus(focusedWindow: focusedWindow)
+        markScreen(screen, forReflowWithChange: .focusChanged(window: focusedWindow))
     }
 
     @objc func applicationDidLaunch(_ notification: Notification) {
@@ -430,50 +432,51 @@ extension WindowManager {
         guard let screen = window.screen() else {
             return
         }
-
-        // We do this to avoid triggering tab swapping when just switching focus between apps.
-        // If the window's app is not running by this point then it's not a tab switch.
-        guard let runningApp = NSRunningApplication(processIdentifier: window.pid()), runningApp.isActive else {
-            return
-        }
-
-        // We take the windows that are being tracked so we can properly detect when a tab switch is a new tab.
-        let applicationWindows = windows.windows(forApplicationWithPID: window.pid())
-
-        for existingWindow in applicationWindows {
-            guard existingWindow != window else {
-                continue
-            }
-
-            let didLeaveScreen = windows.isWindowActive(existingWindow) && !existingWindow.isOnScreen()
-            let isInvalid = existingWindow.cgID() == kCGNullWindowID
-
-            // The window needs to have either left the screen and therefore is being replaced
-            // or be invalid and therefore being removed and can be replaced.
-            guard didLeaveScreen || isInvalid else {
-                continue
-            }
-
-            // We have to make sure that we haven't had a focus change too recently as that could mean
-            // the window is already active, but just became focused by swapping window focus.
-            // The time is in seconds, and too long a time ends up with quick switches triggering tabs to incorrectly
-            // swap.
-            if let lastFocusChange = lastFocusDate, abs(lastFocusChange.timeIntervalSinceNow) < 0.1 && !isInvalid {
-                continue
-            }
-
-            // Add the new window to be tracked, swap it with the existing window, regenerate cache to account
-            // for the change, and then reflow.
-            add(window: window)
-            executeTransition(.switchWindows(existingWindow, window))
-            windows.regenerateActiveIDCache()
-            markScreen(screen, forReflowWithChange: .unknown)
-
-            return
-        }
+//
+//        // We do this to avoid triggering tab swapping when just switching focus between apps.
+//        // If the window's app is not running by this point then it's not a tab switch.
+//        guard let runningApp = NSRunningApplication(processIdentifier: window.pid()), runningApp.isActive else {
+//            return
+//        }
+//
+//        // We take the windows that are being tracked so we can properly detect when a tab switch is a new tab.
+//        let applicationWindows = windows.windows(forApplicationWithPID: window.pid())
+//
+//        for existingWindow in applicationWindows {
+//            guard existingWindow != window else {
+//                continue
+//            }
+//
+//            let didLeaveScreen = windows.isWindowActive(existingWindow) && !existingWindow.isOnScreen()
+//            let isInvalid = existingWindow.cgID() == kCGNullWindowID
+//
+//            // The window needs to have either left the screen and therefore is being replaced
+//            // or be invalid and therefore being removed and can be replaced.
+//            guard didLeaveScreen || isInvalid else {
+//                continue
+//            }
+//
+//            // We have to make sure that we haven't had a focus change too recently as that could mean
+//            // the window is already active, but just became focused by swapping window focus.
+//            // The time is in seconds, and too long a time ends up with quick switches triggering tabs to incorrectly
+//            // swap.
+////            if let lastFocusChange = lastFocusDate, abs(lastFocusChange.timeIntervalSinceNow) < 0.05 && !isInvalid {
+////                continue
+////            }
+//
+//            // Add the new window to be tracked, swap it with the existing window, regenerate cache to account
+//            // for the change, and then reflow.
+//            add(window: window)
+//            executeTransition(.switchWindows(existingWindow, window))
+//            windows.regenerateActiveIDCache()
+//            markScreen(screen, forReflowWithChange: .unknown)
+//
+//            return
+//        }
 
         // If we've reached this point we haven't found any tab to switch out, but this window could still be new.
         add(window: window)
+        markScreen(screen, forReflowWithChange: .add(window: window))
     }
 
     func onReflowInitiation() {
@@ -481,9 +484,9 @@ extension WindowManager {
     }
 
     func onReflowCompletion() {
-//        if let focusedWindow = Window.currentlyFocused() {
-//            doMouseFollowsFocus(focusedWindow: focusedWindow)
-//        }
+        //        if let focusedWindow = Window.currentlyFocused() {
+        //            doMouseFollowsFocus(focusedWindow: focusedWindow)
+        //        }
 
         // This handler will be executed by the Operation, in a queue.  Although async
         // (and although the docs say that it executes in a separate thread), I consider
@@ -582,11 +585,10 @@ extension WindowManager: ApplicationObservationDelegate {
         } else {
             markScreen(screen, forReflowWithChange: .focusChanged(window: window))
         }
-
-//        doMouseFollowsFocus(focusedWindow: window)
     }
 
     func application(_ application: AnyApplication<Application>, didFindPotentiallyNewWindow window: Window) {
+        markAllScreensForReflow(withChange: .add(window: window))
         swapInTab(window: window)
     }
 
@@ -594,33 +596,78 @@ extension WindowManager: ApplicationObservationDelegate {
         guard userConfiguration.mouseSwapsWindows() else {
             return
         }
-
         guard let screen = window.screen(), activeWindows(on: screen).contains(window) else {
             return
         }
-
-        switch mouseStateKeeper.state {
-        case .dragging:
-            // be aware of last reflow time, again to prevent race condition
-            let reflowEndInterval = Date().timeIntervalSince(lastReflowTime)
-            guard reflowEndInterval > mouseStateKeeper.dragRaceThresholdSeconds else { break }
-
-            // record window and wait for mouse up
-            mouseStateKeeper.state = .moving(window: window)
-        case let .doneDragging(lmbUpMoment):
-            mouseStateKeeper.state = .pointing // flip state first to prevent race condition
-
-            // if mouse button recently came up, assume window move is related
-            let dragEndInterval = Date().timeIntervalSince(lmbUpMoment)
-            guard dragEndInterval < mouseStateKeeper.dragRaceThresholdSeconds else { break }
-
-            mouseStateKeeper.swapDraggedWindowWithDropzone(window)
-        default:
-            break
+        let windows = windows.windowSet(forActiveWindowsOnScreen: screen)
+        guard
+            let screenManager: ScreenManager<WindowManager<Application>> = focusedScreenManager(),
+            let layout = screenManager.currentLayout,
+            layout is PanedLayout
+        else {
+            return
         }
+        guard let oldFrame = layout.assignedFrame(window, of: windows, on: screen) else {
+            return
+        }
+        guard let screenID = screen.screenID() else {
+            log.warning("screen didn't have screenID: \(screen)")
+            return
+        }
+        let lastWindows = lastWindowsOnScreen[screenID] ?? Set()
+        let windowsSet = Set(windows.windows.map { $0.id })
+
+        if lastWindows != windowsSet {
+            markAllScreensForReflow(withChange: .resizeWindow) // TODO: add .moveWindow
+        }
+//        log.debug("mouseStateKeeperState=\(mouseStateKeeper.state)" )
+//        switch mouseStateKeeper.state {
+//        case .pointing, .dragging:
+//            markAllScreensForReflow(withChange: .layoutChange)
+//        default:
+//            break
+//        }
+
+        //        switch mouseStateKeeper.state {
+        //        case .dragging:
+        //            // be aware of last reflow time, again to prevent race condition
+        //            let reflowEndInterval = Date().timeIntervalSince(lastReflowTime)
+        //            guard reflowEndInterval > mouseStateKeeper.dragRaceThresholdSeconds else { break }
+        //
+        //            // record window and wait for mouse up
+        //            mouseStateKeeper.state = .moving(window: window)
+        //        case let .doneDragging(lmbUpMoment):
+        //            mouseStateKeeper.state = .pointing // flip state first to prevent race condition
+        //
+        //            // if mouse button recently came up, assume window move is related
+        //            let dragEndInterval = Date().timeIntervalSince(lmbUpMoment)
+        //            guard dragEndInterval < mouseStateKeeper.dragRaceThresholdSeconds else { break }
+        //
+        //            mouseStateKeeper.swapDraggedWindowWithDropzone(window)
+        //        default:
+        //            break
+        //        }
+    }
+
+    func handleWindowSetChange(lastWindows: Set<Window.WindowID>, windowsSet: Set<Window.WindowID>, screenID: String, numWindows: Int, screenManager: ScreenManager<WindowManager<Application>>) {
+        let evenRatio = 1.0 / Double(numWindows)
+        log.info("Number of windows changed... do that | screenID=\(screenID) | ratio=\(evenRatio)")
+        log.debug("window_count_change, num_windows=\(numWindows) ratio=\(evenRatio)")
+        log.debug("windows=\(windowsSet)")
+        screenManager.updateCurrentLayout { layout in
+            if let panedLayout = layout as? PanedLayout {
+                panedLayout.recommendMainPaneRatio(evenRatio)
+            }
+            if let columnLayout = layout as? ColumnLayout {
+                columnLayout.recommendMainPaneRatio(evenRatio)
+            }
+        }
+        lastWindowsOnScreen[screenID] = windowsSet
+        markAllScreensForReflow(withChange: .spaceChange)
     }
 
     func application(_ application: AnyApplication<Application>, didResizeWindow window: Window) {
+        print("didResizeWindow")
         guard userConfiguration.mouseResizesWindows() else {
             return
         }
@@ -637,32 +684,44 @@ extension WindowManager: ApplicationObservationDelegate {
             return
         }
 
-        guard let oldFrame = layout.assignedFrame(window, of: windows.windowSet(forActiveWindowsOnScreen: screen), on: screen) else {
+        guard let screenID = screen.screenID() else {
+            log.warning("screen didn't have screenID: \(screen)")
             return
         }
 
+        let windows = windows.windowSet(forActiveWindowsOnScreen: screen)
+        let numWindows = windows.windows.count
+
+        guard let oldFrame = layout.assignedFrame(window, of: windows, on: screen) else {
+            return
+        }
+
+        let lastWindows = lastWindowsOnScreen[screenID] ?? Set()
+        let windowsSet = Set(windows.windows.map { $0.id })
+
         let ratio = oldFrame.impliedMainPaneRatio(windowFrame: window.frame())
+        if ratio.isNaN || lastWindows != windowsSet || true {
 
-        switch mouseStateKeeper.state {
-        case .dragging, .resizing:
-            // record window and wait for mouse up
-            mouseStateKeeper.state = .resizing(screen: screen, ratio: ratio)
-        case let .doneDragging(lmbUpMoment):
-            // if mouse button recently came up, assume window resize is related
-            let dragEndInterval = Date().timeIntervalSince(lmbUpMoment)
-            if dragEndInterval < mouseStateKeeper.dragRaceThresholdSeconds {
-                mouseStateKeeper.state = .pointing // flip state first to prevent race condition
+                self.handleWindowSetChange(lastWindows: lastWindows, windowsSet: windowsSet, screenID: screenID, numWindows: numWindows, screenManager: screenManager)
+//            let delay = DispatchTime.now() + .milliseconds(15)
+//            DispatchQueue.main.asyncAfter(deadline: delay) {
+//                self.handleWindowSetChange(lastWindows: lastWindows, windowsSet: windowsSet, screenID: screenID, numWindows: numWindows, screenManager: screenManager)
+//            }
+            lastWindowsOnScreen[screenID] = Set(windows.windows.map { $0.id })
+            return
+        }
 
-                if let screenManager: ScreenManager<WindowManager<Application>> = focusedScreenManager() {
-                    screenManager.updateCurrentLayout { layout in
-                        if let panedLayout = layout as? PanedLayout {
-                            panedLayout.recommendMainPaneRatio(ratio)
-                        }
-                    }
+        if let screenManager: ScreenManager<WindowManager<Application>> = focusedScreenManager() {
+            screenManager.updateCurrentLayout { layout in
+                if let panedLayout = layout as? PanedLayout {
+                    panedLayout.recommendMainPaneRatio(ratio)
                 }
+                if let columnLayout = layout as? ColumnLayout {
+                    columnLayout.recommendMainPaneRatio(ratio)
+                }
+                lastWindowsOnScreen[screenID] = Set(windows.windows.map { $0.id })
+                return
             }
-        default:
-            break
         }
     }
 
@@ -819,14 +878,32 @@ extension WindowManager: FocusTransitionTarget {
 }
 
 extension WindowManager: ScreenManagerDelegate {
+
+    func mouseState() -> MouseStatePhysical {
+        switch mouseStateKeeper.state {
+        case .pointing:
+            return MouseStatePhysical.pointing // or however you want to handle this case
+        case .clicking:
+            return MouseStatePhysical.clicking
+        case .dragging:
+            return MouseStatePhysical.dragging
+        case .moving:
+            return MouseStatePhysical.dragging // or another appropriate handling
+        case .resizing:
+            return MouseStatePhysical.dragging // or another appropriate handling
+        case .doneDragging:
+            return MouseStatePhysical.dragging // or another appropriate handling
+        }
+    }
+
     func applyWindowLimit(forScreenManager screenManager: ScreenManager<WindowManager<Application>>, minimizingIn range: (Int) -> Range<Int>) {
         guard let screen = screenManager.screen else {
             return
         }
 
         let windows = screenManager.currentLayout is FloatingLayout
-            ? self.windows(onScreen: screen).filter { $0.shouldBeManaged() }
-            : activeWindows(on: screen)
+        ? self.windows(onScreen: screen).filter { $0.shouldBeManaged() }
+        : activeWindows(on: screen)
         windows[range(windows.count)].forEach {
             $0.minimize()
         }

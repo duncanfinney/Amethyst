@@ -66,36 +66,32 @@ class MouseStateKeeper<Delegate: MouseStateKeeperDelegate> {
     // you're using the "3 finger drag" accessibility option, where no physical button
     // is being pressed.
     func handleMouseEvent(anEvent: NSEvent) {
+//        log.debug("handleMouseEvent \(anEvent.type)")
         switch anEvent.type {
         case .leftMouseDown:
             self.state = .clicking
         case .leftMouseDragged:
-            switch self.state {
-            case .moving, .resizing:
-            break // ignore - we have what we need
-            case .pointing, .clicking, .dragging, .doneDragging:
-                self.state = .dragging
-            }
-
+            self.state = .dragging
         case .leftMouseUp:
-            switch self.state {
-            case .dragging:
-                // assume window move event will come shortly after
-                self.state = .doneDragging(atTime: Date())
-            case let .moving(draggedWindow):
-                self.state = .pointing // flip state first to prevent race condition
-                self.swapDraggedWindowWithDropzone(draggedWindow)
-            case let .resizing(_, ratio):
-                self.state = .pointing
-                self.resizeFrameToDraggedWindowBorder(ratio)
-            case .doneDragging:
-                self.state = .doneDragging(atTime: Date()) // reset the clock I guess
-            case .clicking:
-                lastClick = Date()
-                self.state = .pointing
-            case .pointing:
-                self.state = .pointing
-            }
+            self.state = .pointing
+            //            switch self.state {
+//            case .dragging:
+//                // assume window move event will come shortly after
+//                self.state = .doneDragging(atTime: Date())
+//            case let .moving(draggedWindow):
+//                self.state = .pointing // flip state first to prevent race condition
+//                self.swapDraggedWindowWithDropzone(draggedWindow)
+//            case let .resizing(_, ratio):
+//                self.state = .pointing
+//                self.resizeFrameToDraggedWindowBorder(ratio)
+//            case .doneDragging:
+//                self.state = .doneDragging(atTime: Date()) // reset the clock I guess
+//            case .clicking:
+//                lastClick = Date()
+//                self.state = .pointing
+//            case .pointing:
+//                self.state = .pointing
+//            }
 
         default: ()
         }

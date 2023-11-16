@@ -28,6 +28,7 @@ class ColumnLayout<Window: WindowType>: Layout<Window>, PanedLayout {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         self.mainPaneCount = try values.decode(Int.self, forKey: .mainPaneCount)
         self.mainPaneRatio = try values.decode(CGFloat.self, forKey: .mainPaneRatio)
+        log.debug("Init mainPaneRatio=\(mainPaneRatio)")
         super.init()
     }
 
@@ -38,6 +39,7 @@ class ColumnLayout<Window: WindowType>: Layout<Window>, PanedLayout {
     }
 
     func recommendMainPaneRawRatio(rawRatio: CGFloat) {
+        log.debug("reccomandMainPaneRatio=\(rawRatio)")
         mainPaneRatio = rawRatio
     }
 
@@ -51,6 +53,7 @@ class ColumnLayout<Window: WindowType>: Layout<Window>, PanedLayout {
 
     override func frameAssignments(_ windowSet: WindowSet<Window>, on screen: Screen) -> [FrameAssignmentOperation<Window>]? {
         let windows = windowSet.windows
+        print("num_windows=\(windows.count)")
 
         guard !windows.isEmpty else {
             return []
