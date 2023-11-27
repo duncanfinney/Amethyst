@@ -179,6 +179,7 @@ final class ScreenManager<Delegate: ScreenManagerDelegate>: NSObject, Codable {
             break
         }
 
+        // TODO: do we need to choose which ones to cancel?
         reflowOperationQueue.cancelAllOperations()
 
         log.debug("Screen: \(screen?.screenID() ?? "unknown") -- Window Change: \(windowChange)")
@@ -238,7 +239,7 @@ final class ScreenManager<Delegate: ScreenManagerDelegate>: NSObject, Codable {
             }
 
             if  delegate?.mouseState() == .dragging {
-//                log.info("trying again because we are dragging")
+                // retry again in 8ms
                 reflow(event)
                 return
             }
