@@ -39,7 +39,11 @@ class ColumnLayout<Window: WindowType>: Layout<Window>, PanedLayout {
     }
 
     func recommendMainPaneRawRatio(rawRatio: CGFloat) {
-        log.debug("reccomandMainPaneRatio=\(rawRatio)")
+        log.debug("recomendMainPaneRatio=\(rawRatio)")
+        if rawRatio == 1.0 {
+            log.error("This is the bug?... no clue why this works")
+            return
+        }
         mainPaneRatio = rawRatio
     }
 
