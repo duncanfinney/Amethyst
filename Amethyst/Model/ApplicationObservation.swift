@@ -239,7 +239,13 @@ struct ApplicationObservation<Delegate: ApplicationObservationDelegate> {
         notifications.forEach { application.unobserve(notification: $0.string) }
     }
 
+    var dropEventsUntil = Date()
+
     private func handle(notification: Notification, window: Window) {
+        guard Date() > dropEventsUntil else {
+            log.debug("app_notification=\(notification) | DROPPED")
+            return
+        }
         log.debug("app_notification=\(notification) | window=\(window.id()))")
         switch notification {
         case .created:

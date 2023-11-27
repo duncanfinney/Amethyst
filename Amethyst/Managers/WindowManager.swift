@@ -28,6 +28,8 @@ final class WindowManager<Application: ApplicationType>: NSObject, Codable {
 
     var lastWindowsOnScreen: [String: Set<Application.Window.WindowID>] = [:]
 
+    var dropEventsUntil = Date()
+
     typealias Window = Application.Window
     typealias Screen = Window.Screen
 
@@ -112,11 +114,10 @@ final class WindowManager<Application: ApplicationType>: NSObject, Codable {
     }
 
     @objc func applicationActivated(_ sender: AnyObject) {
-        // TODO: do we need this back in?
-        //        guard let focusedWindow = Window.currentlyFocused(), let screen = focusedWindow.screen() else {
-//            return
-//        }
-//        markScreen(screen, forReflowWithChange: .focusChanged(window: focusedWindow))
+        guard let focusedWindow = Window.currentlyFocused(), let screen = focusedWindow.screen() else {
+            return
+        }
+        markScreen(screen, forReflowWithChange: .focusChanged(window: focusedWindow))
     }
 
     @objc func applicationDidLaunch(_ notification: Notification) {
@@ -576,17 +577,17 @@ extension WindowManager: ApplicationObservationDelegate {
 
     func application(_ application: AnyApplication<Application>, didFocusWindow window: Window) {
         // TODO: might need to put this back
-        //        guard let screen = window.screen() else {
-//            return
-//        }
-//
-//        lastFocusDate = Date()
-//
-//        if !windows.isWindowTracked(window) {
-//            markScreen(screen, forReflowWithChange: .unknown)
-//        } else {
-//            markScreen(screen, forReflowWithChange: .focusChanged(window: window))
-//        }
+        guard let screen = window.screen() else {
+            return
+        }
+
+        lastFocusDate = Date()
+
+        if !windows.isWindowTracked(window) {
+            markScreen(screen, forReflowWithChange: .unknown)
+        } else {
+            markScreen(screen, forReflowWithChange: .focusChanged(window: window))
+        }
     }
 
     func application(_ application: AnyApplication<Application>, didFindPotentiallyNewWindow window: Window) {
@@ -660,33 +661,6 @@ extension WindowManager: ApplicationObservationDelegate {
         if lastWindows != windowsSet {
             markAllScreensForReflow(withChange: .resizeWindow) // TODO: add .moveWindow
         }
-        //        log.debug("mouseStateKeeperState=\(mouseStateKeeper.state)" )
-        //        switch mouseStateKeeper.state {
-        //        case .pointing, .dragging:
-        //            markAllScreensForReflow(withChange: .layoutChange)
-        //        default:
-        //            break
-        //        }
-
-        //        switch mouseStateKeeper.state {
-        //        case .dragging:
-        //            // be aware of last reflow time, again to prevent race condition
-        //            let reflowEndInterval = Date().timeIntervalSince(lastReflowTime)
-        //            guard reflowEndInterval > mouseStateKeeper.dragRaceThresholdSeconds else { break }
-        //
-        //            // record window and wait for mouse up
-        //            mouseStateKeeper.state = .moving(window: window)
-        //        case let .doneDragging(lmbUpMoment):
-        //            mouseStateKeeper.state = .pointing // flip state first to prevent race condition
-        //
-        //            // if mouse button recently came up, assume window move is related
-        //            let dragEndInterval = Date().timeIntervalSince(lmbUpMoment)
-        //            guard dragEndInterval < mouseStateKeeper.dragRaceThresholdSeconds else { break }
-        //
-        //            mouseStateKeeper.swapDraggedWindowWithDropzone(window)
-        //        default:
-        //            break
-        //        }
     }
 
     func handleWindowSetChange(lastWindows: Set<Window.WindowID>, windowsSet: Set<Window.WindowID>, screenID: String, numWindows: Int, screenManager: ScreenManager<WindowManager<Application>>) {
@@ -704,10 +678,15 @@ extension WindowManager: ApplicationObservationDelegate {
         }
         lastWindowsOnScreen[screenID] = windowsSet
         markAllScreensForReflow(withChange: .spaceChange)
+        dropEventsUntil = Date() + 0.5 // drop resize events for 0.5s
     }
 
     func application(_ application: AnyApplication<Application>, didResizeWindow window: Window) {
-        print("didResizeWindow")
+        guard Date() > dropEventsUntil else {
+            log.error("Dropping didResizeWindow event for another \(dropEventsUntil.timeIntervalSinceNow)")
+            return
+        }
+        log.error("Handling didResizeWindow")
         guard userConfiguration.mouseResizesWindows() else {
             return
         }
@@ -740,13 +719,9 @@ extension WindowManager: ApplicationObservationDelegate {
         let windowsSet = Set(windows.windows.map { $0.id })
 
         let ratio = oldFrame.impliedMainPaneRatio(windowFrame: window.frame())
-        if ratio.isNaN || lastWindows != windowsSet || true {
+        if ratio.isNaN || lastWindows != windowsSet {
 
             self.handleWindowSetChange(lastWindows: lastWindows, windowsSet: windowsSet, screenID: screenID, numWindows: numWindows, screenManager: screenManager)
-            //            let delay = DispatchTime.now() + .milliseconds(15)
-            //            DispatchQueue.main.asyncAfter(deadline: delay) {
-            //                self.handleWindowSetChange(lastWindows: lastWindows, windowsSet: windowsSet, screenID: screenID, numWindows: numWindows, screenManager: screenManager)
-            //            }
             lastWindowsOnScreen[screenID] = Set(windows.windows.map { $0.id })
             return
         }
