@@ -245,7 +245,7 @@ class BinarySpacePartitioningLayout<Window: WindowType>: StatefulLayout<Window> 
 
             windowNode.windowID = otherWindowID
             otherWindowNode.windowID = windowID
-        case .applicationDeactivate, .applicationActivate, .spaceChange, .layoutChange, .resizeWindow, .unknown:
+        case .applicationDeactivate, .applicationActivate, .spaceChange, .layoutChange, .tabChange, .none, .resizeWindow, .unknown:
             break
         }
     }

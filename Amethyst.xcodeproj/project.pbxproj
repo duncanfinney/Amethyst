@@ -3,12 +3,11 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		1A4B46EB20AA7717003D5110 /* NSTableView+Amethyst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A4B46EA20AA7717003D5110 /* NSTableView+Amethyst.swift */; };
-		1FC9FDF42B03B82400D02FA4 /* Silica in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC9FDF32B03B82400D02FA4 /* Silica */; };
 		2A6D9A4125E5D24D006A36B5 /* AppManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A6D9A4025E5D24D006A36B5 /* AppManager.swift */; };
 		4000DB10239CA07000365A0C /* WideLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4000DB0F239CA07000365A0C /* WideLayoutTests.swift */; };
 		400540F22325CDF4004B8656 /* Reliability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 400540F12325CDF4004B8656 /* Reliability.swift */; };
@@ -41,6 +40,8 @@
 		401C35B32244650F0019ED07 /* MouseState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 401C35B22244650F0019ED07 /* MouseState.swift */; };
 		401C35B522482EAF0019ED07 /* WindowTransitionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 401C35B422482EAF0019ED07 /* WindowTransitionCoordinator.swift */; };
 		401C35B7224831470019ED07 /* FocusTransitionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 401C35B6224831470019ED07 /* FocusTransitionCoordinator.swift */; };
+		401F89BB2B4B5A7900DBA976 /* Silica in Frameworks */ = {isa = PBXBuildFile; productRef = 401F89BA2B4B5A7900DBA976 /* Silica */; };
+		401F89BE2B4B5B1C00DBA976 /* Silica in Frameworks */ = {isa = PBXBuildFile; productRef = 401F89BD2B4B5B1C00DBA976 /* Silica */; };
 		4029C4F11C112478001E4788 /* Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4029C4F01C112478001E4788 /* Layout.swift */; };
 		402DB6E21742E41A00D1C936 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 402DB6E11742E41A00D1C936 /* Cocoa.framework */; };
 		402DB6EC1742E41A00D1C936 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 402DB6EA1742E41A00D1C936 /* InfoPlist.strings */; };
@@ -268,11 +269,12 @@
 				400D49002A92B0A00082750F /* Yams in Frameworks */,
 				40AE15E62A92EA7500E14536 /* RxCocoa in Frameworks */,
 				40C3F91F1BD1B22E00F58660 /* SystemConfiguration.framework in Frameworks */,
-				1FC9FDF42B03B82400D02FA4 /* Silica in Frameworks */,
+				401F89BB2B4B5A7900DBA976 /* Silica in Frameworks */,
 				40AE15E82A92EA7500E14536 /* RxSwift in Frameworks */,
 				400D48F72A92AF9B0082750F /* LoginServiceKit in Frameworks */,
 				402DB6E21742E41A00D1C936 /* Cocoa.framework in Frameworks */,
 				400D48F42A92AF1E0082750F /* Cartography in Frameworks */,
+				401F89BE2B4B5B1C00DBA976 /* Silica in Frameworks */,
 				40C3F91E1BD1B22E00F58660 /* Security.framework in Frameworks */,
 				40CF37C029B440A100CDB07A /* ArgumentParser in Frameworks */,
 				400D48FA2A92B0130082750F /* Sparkle in Frameworks */,
@@ -618,7 +620,8 @@
 				40AE15E52A92EA7500E14536 /* RxCocoa */,
 				40AE15E72A92EA7500E14536 /* RxSwift */,
 				40AE15F42A92EE8000E14536 /* MASShortcut */,
-				1FC9FDF32B03B82400D02FA4 /* Silica */,
+				401F89BA2B4B5A7900DBA976 /* Silica */,
+				401F89BD2B4B5B1C00DBA976 /* Silica */,
 			);
 			productName = Amethyst;
 			productReference = 402DB6DE1742E41A00D1C936 /* Amethyst.app */;
@@ -691,7 +694,7 @@
 				40AE15EC2A92EBD800E14536 /* XCRemoteSwiftPackageReference "Quick" */,
 				40AE15EF2A92EC5300E14536 /* XCRemoteSwiftPackageReference "Nimble" */,
 				40AE15F32A92EE8000E14536 /* XCRemoteSwiftPackageReference "MASShortcut" */,
-				1FC9FDF22B03B82400D02FA4 /* XCLocalSwiftPackageReference "../Silica" */,
+				401F89BC2B4B5B1C00DBA976 /* XCRemoteSwiftPackageReference "silica" */,
 			);
 			productRefGroup = 402DB6DF1742E41A00D1C936 /* Products */;
 			projectDirPath = "";
@@ -1004,13 +1007,13 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Amethyst/AmethystDebug.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 108;
+				CURRENT_PROJECT_VERSION = 112;
 				DEAD_CODE_STRIPPING = YES;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 6QS6PJNCD9;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_MODULE_VERIFIER = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1027,7 +1030,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 0.20.0;
+				MARKETING_VERSION = 0.21.2;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++14";
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"DEBUG\"";
@@ -1047,13 +1050,12 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Amethyst/Amethyst.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 108;
+				CURRENT_PROJECT_VERSION = 112;
 				DEAD_CODE_STRIPPING = YES;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 6QS6PJNCD9;
+				DEVELOPMENT_TEAM = 82P2XLB4UH;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_MODULE_VERIFIER = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1070,7 +1072,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 0.20.0;
+				MARKETING_VERSION = 0.21.2;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++14";
 				ONLY_ACTIVE_ARCH = NO;
@@ -1179,13 +1181,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		1FC9FDF22B03B82400D02FA4 /* XCLocalSwiftPackageReference "../Silica" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../Silica;
-		};
-/* End XCLocalSwiftPackageReference section */
-
 /* Begin XCRemoteSwiftPackageReference section */
 		400D48F22A92AF1E0082750F /* XCRemoteSwiftPackageReference "Cartography" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -1225,6 +1220,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 5.0.0;
+			};
+		};
+		401F89BC2B4B5B1C00DBA976 /* XCRemoteSwiftPackageReference "silica" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ianyh/silica";
+			requirement = {
+				branch = master;
+				kind = branch;
 			};
 		};
 		40AE15E12A92E9AF00E14536 /* XCRemoteSwiftPackageReference "SwiftyBeaver" */ = {
@@ -1278,10 +1281,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		1FC9FDF32B03B82400D02FA4 /* Silica */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = Silica;
-		};
 		400D48F32A92AF1E0082750F /* Cartography */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 400D48F22A92AF1E0082750F /* XCRemoteSwiftPackageReference "Cartography" */;
@@ -1306,6 +1305,15 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 400D48FE2A92B0A00082750F /* XCRemoteSwiftPackageReference "Yams" */;
 			productName = Yams;
+		};
+		401F89BA2B4B5A7900DBA976 /* Silica */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Silica;
+		};
+		401F89BD2B4B5B1C00DBA976 /* Silica */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 401F89BC2B4B5B1C00DBA976 /* XCRemoteSwiftPackageReference "silica" */;
+			productName = Silica;
 		};
 		40AE15E22A92E9AF00E14536 /* SwiftyBeaver */ = {
 			isa = XCSwiftPackageProductDependency;

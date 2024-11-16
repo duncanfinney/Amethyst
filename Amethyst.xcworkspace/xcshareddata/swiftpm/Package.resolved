@@ -1,4 +1,5 @@
 {
+  "originHash" : "43f1b1e9bfd866a37b073557f24d496c85ab3a7508ae523528cda0c3afb30aa9",
   "pins" : [
     {
       "identity" : "cartography",
@@ -73,6 +74,15 @@
       }
     },
     {
+      "identity" : "silica",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ianyh/silica",
+      "state" : {
+        "branch" : "master",
+        "revision" : "4b0e9f62c1ea97a2b97dbcf214be4209dc9d7a71"
+      }
+    },
+    {
       "identity" : "sparkle",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sparkle-project/Sparkle",
@@ -118,5 +128,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }
