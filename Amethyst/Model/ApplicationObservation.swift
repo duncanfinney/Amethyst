@@ -213,7 +213,6 @@ struct ApplicationObservation<Delegate: ApplicationObservationDelegate> {
      An error when failing to add observer.
      */
     private func addObserver(for notification: Notification) throws {
-        log.debug("addObserver for:\(notification)")
         let success = application.observe(notification: notification.string) { element in
             guard let window = Window(element: element) else {
                 return
@@ -239,14 +238,7 @@ struct ApplicationObservation<Delegate: ApplicationObservationDelegate> {
         notifications.forEach { application.unobserve(notification: $0.string) }
     }
 
-    var dropEventsUntil = Date()
-
     private func handle(notification: Notification, window: Window) {
-        guard Date() > dropEventsUntil else {
-            log.debug("app_notification=\(notification) | DROPPED")
-            return
-        }
-        log.debug("app_notification=\(notification) | window=\(window.id()))")
         switch notification {
         case .created:
             delegate?.application(application, didFindPotentiallyNewWindow: window)

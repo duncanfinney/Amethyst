@@ -20,7 +20,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @IBOutlet var preferencesWindowController: PreferencesWindowController?
 
-    public var windowManager: WindowManager<SIApplication>?
+    fileprivate var windowManager: WindowManager<SIApplication>?
     private var hotKeyManager: HotKeyManager<SIApplication>?
 
     fileprivate var statusItem: NSStatusItem?

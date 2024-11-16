@@ -61,10 +61,6 @@ struct CGWindowsInfo<Window: WindowType> {
             return nil
         }
 
-        if (spaces as NSArray as? [NSNumber])?.count ?? 0 > 1 {
-            log.debug("returning multiple spaces? wtf")
-        }
-
         return (spaces as NSArray as? [NSNumber])?.first?.intValue
     }
 }

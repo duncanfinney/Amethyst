@@ -58,7 +58,7 @@ final class WindowManager<Application: ApplicationType>: NSObject, Codable {
     private var lastReflowTime = Date()
     private var lastFocusDate: Date?
 
-    public lazy var mouseStateKeeper = MouseStateKeeper(delegate: self)
+    private lazy var mouseStateKeeper = MouseStateKeeper(delegate: self)
     private lazy var applicationEventHandler = ApplicationEventHandler(delegate: self)
     private let userConfiguration: UserConfiguration
     private let disposeBag = DisposeBag()
@@ -384,11 +384,12 @@ extension WindowManager {
 
     private func add(window: Window, retries: Int = 5) {
         guard !windows.isWindowTracked(window) else {
-            log.warning("skipping window")
+            log.warning("skipping window - already tracked - \(window.pid()) \(window.title)")
             return
         }
 
-        guard window.shouldBeManaged() else {
+        if !window.shouldBeManaged() {
+            log.warning("skipping window  - not managed - \(window.pid()) \(window.title)")
             return
         }
 
@@ -436,51 +437,50 @@ extension WindowManager {
         guard let screen = window.screen() else {
             return
         }
-        //
-        //        // We do this to avoid triggering tab swapping when just switching focus between apps.
-        //        // If the window's app is not running by this point then it's not a tab switch.
-        //        guard let runningApp = NSRunningApplication(processIdentifier: window.pid()), runningApp.isActive else {
-        //            return
-        //        }
-        //
-        //        // We take the windows that are being tracked so we can properly detect when a tab switch is a new tab.
-        //        let applicationWindows = windows.windows(forApplicationWithPID: window.pid())
-        //
-        //        for existingWindow in applicationWindows {
-        //            guard existingWindow != window else {
-        //                continue
-        //            }
-        //
-        //            let didLeaveScreen = windows.isWindowActive(existingWindow) && !existingWindow.isOnScreen()
-        //            let isInvalid = existingWindow.cgID() == kCGNullWindowID
-        //
-        //            // The window needs to have either left the screen and therefore is being replaced
-        //            // or be invalid and therefore being removed and can be replaced.
-        //            guard didLeaveScreen || isInvalid else {
-        //                continue
-        //            }
-        //
-        //            // We have to make sure that we haven't had a focus change too recently as that could mean
-        //            // the window is already active, but just became focused by swapping window focus.
-        //            // The time is in seconds, and too long a time ends up with quick switches triggering tabs to incorrectly
-        //            // swap.
-        ////            if let lastFocusChange = lastFocusDate, abs(lastFocusChange.timeIntervalSinceNow) < 0.05 && !isInvalid {
-        ////                continue
-        ////            }
-        //
-        //            // Add the new window to be tracked, swap it with the existing window, regenerate cache to account
-        //            // for the change, and then reflow.
-        //            add(window: window)
-        //            executeTransition(.switchWindows(existingWindow, window))
-        //            windows.regenerateActiveIDCache()
-        //            markScreen(screen, forReflowWithChange: .unknown)
-        //
-        //            return
-        //        }
+
+        // We do this to avoid triggering tab swapping when just switching focus between apps.
+        // If the window's app is not running by this point then it's not a tab switch.
+        guard let runningApp = NSRunningApplication(processIdentifier: window.pid()), runningApp.isActive else {
+            return
+        }
+
+        // We take the windows that are being tracked so we can properly detect when a tab switch is a new tab.
+        let applicationWindows = windows.windows(forApplicationWithPID: window.pid())
+
+        for existingWindow in applicationWindows {
+            guard existingWindow != window else {
+                continue
+            }
+
+            let didLeaveScreen = windows.isWindowActive(existingWindow) && !existingWindow.isOnScreen()
+            let isInvalid = existingWindow.cgID() == kCGNullWindowID
+
+            // The window needs to have either left the screen and therefore is being replaced
+            // or be invalid and therefore being removed and can be replaced.
+            guard didLeaveScreen || isInvalid else {
+                continue
+            }
+
+            // We have to make sure that we haven't had a focus change too recently as that could mean
+            // the window is already active, but just became focused by swapping window focus.
+            // The time is in seconds, and too long a time ends up with quick switches triggering tabs to incorrectly
+            // swap.
+            if let lastFocusChange = lastFocusDate, abs(lastFocusChange.timeIntervalSinceNow) < 0.1 && !isInvalid {
+                continue
+            }
+
+            // Add the new window to be tracked, swap it with the existing window, regenerate cache to account
+            // for the change, and then reflow.
+            add(window: window)
+            executeTransition(.switchWindows(existingWindow, window))
+            windows.regenerateActiveIDCache()
+            markScreen(screen, forReflowWithChange: .tabChange)
+
+            return
+        }
 
         // If we've reached this point we haven't found any tab to switch out, but this window could still be new.
         add(window: window)
-        markScreen(screen, forReflowWithChange: .add(window: window))
     }
 
     func onReflowInitiation() {
@@ -488,9 +488,9 @@ extension WindowManager {
     }
 
     func onReflowCompletion() {
-        //        if let focusedWindow = Window.currentlyFocused() {
-        //            doMouseFollowsFocus(focusedWindow: focusedWindow)
-        //        }
+//        if let focusedWindow = Window.currentlyFocused() {
+//            doMouseFollowsFocus(focusedWindow: focusedWindow)
+//        }
 
         // This handler will be executed by the Operation, in a queue.  Although async
         // (and although the docs say that it executes in a separate thread), I consider
@@ -578,7 +578,6 @@ extension WindowManager: ApplicationObservationDelegate {
     }
 
     func application(_ application: AnyApplication<Application>, didFocusWindow window: Window) {
-        // TODO: might need to put this back
         guard let screen = window.screen() else {
             return
         }
@@ -590,6 +589,8 @@ extension WindowManager: ApplicationObservationDelegate {
         } else {
             markScreen(screen, forReflowWithChange: .focusChanged(window: window))
         }
+
+//        doMouseFollowsFocus(focusedWindow: window)
     }
 
     func application(_ application: AnyApplication<Application>, didFindPotentiallyNewWindow window: Window) {
@@ -629,13 +630,6 @@ extension WindowManager: ApplicationObservationDelegate {
             return
         }
         if !activeWindows(on: screen!).contains(window) {
-            let cgScreen = screenForWindow(cgid: window.cgID())
-            let firstDifferentScreen = windows
-                .windows
-                .map { $0.screen() }
-                .first { screen in
-                    return screen?.screenID() != window.screen()?.screenID()
-                }
             markAllScreensForReflow(withChange: .spaceChange)
             return
         }
@@ -661,7 +655,7 @@ extension WindowManager: ApplicationObservationDelegate {
         let windowsSet = Set(windows.windows.map { $0.id })
 
         if lastWindows != windowsSet {
-            markAllScreensForReflow(withChange: .resizeWindow) // TODO: add .moveWindow
+            markAllScreensForReflow(withChange: .unknown) // TODO: add .moveWindow
         }
     }
 
@@ -719,6 +713,7 @@ extension WindowManager: ApplicationObservationDelegate {
 
         let lastWindows = lastWindowsOnScreen[screenID] ?? Set()
         let windowsSet = Set(windows.windows.map { $0.id })
+        log.error("lastWindows: \(lastWindows), windowsSet: \(windowsSet)")
 
         let ratio = oldFrame.impliedMainPaneRatio(windowFrame: window.frame())
         if ratio.isNaN || lastWindows != windowsSet {
@@ -935,8 +930,8 @@ extension WindowManager: ScreenManagerDelegate {
         }
 
         let windows = screenManager.currentLayout is FloatingLayout
-        ? self.windows(onScreen: screen).filter { $0.shouldBeManaged() }
-        : activeWindows(on: screen)
+            ? self.windows(onScreen: screen).filter { $0.shouldBeManaged() }
+            : activeWindows(on: screen)
         windows[range(windows.count)].forEach {
             $0.minimize()
         }

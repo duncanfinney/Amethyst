@@ -8,7 +8,7 @@
 
 import Foundation
 import MASShortcut
-// import Silica
+import Silica
 
 // Type for defining key code.
 typealias AMKeyCode = Int

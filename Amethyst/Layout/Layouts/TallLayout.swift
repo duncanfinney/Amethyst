@@ -6,7 +6,7 @@
 //  Copyright © 2015 Ian Ynda-Hummel. All rights reserved.
 //
 
- import Silica
+import Silica
 
 class TallLayout<Window: WindowType>: Layout<Window>, PanedLayout {
     override static var layoutName: String { return "Tall" }

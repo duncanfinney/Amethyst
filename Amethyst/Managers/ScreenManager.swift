@@ -175,11 +175,10 @@ final class ScreenManager<Delegate: ScreenManagerDelegate>: NSObject, Codable {
             if lastFocusedWindow == window {
                 lastFocusedWindow = nil
             }
-        case .windowSwap, .applicationActivate, .applicationDeactivate, .spaceChange, .layoutChange, .tabChange, .none, .resizeWindow, .unknown:
+        case .windowSwap, .applicationActivate, .applicationDeactivate, .spaceChange, .layoutChange, .tabChange, .none, .unknown:
             break
         }
 
-        // TODO: do we need to choose which ones to cancel?
         reflowOperationQueue.cancelAllOperations()
 
         log.debug("Screen: \(screen?.screenID() ?? "unknown") -- Window Change: \(windowChange)")
